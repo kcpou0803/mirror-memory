@@ -35,7 +35,6 @@ describe("generatePuzzle", () => {
       expect(puzzle.mirrors.length).toBeGreaterThanOrEqual(difficulty.mirrorRange[0]);
       expect(puzzle.mirrors.length).toBeLessThanOrEqual(difficulty.mirrorRange[1]);
       expect(puzzle.collisionCount).toBeGreaterThanOrEqual(difficulty.collisionRange[0]);
-      expect(puzzle.collisionCount).toBeGreaterThanOrEqual(3);
       expect(puzzle.collisionCount).toBeLessThanOrEqual(difficulty.collisionRange[1]);
       expect(puzzle.correctExit).toBeTruthy();
     }
@@ -43,24 +42,35 @@ describe("generatePuzzle", () => {
 });
 
 describe("streak progression", () => {
-  it("raises the displayed level and adds one mirror every three wins", () => {
+  it("alternates mirror increases with collision-range increases", () => {
     const base = DIFFICULTIES[0];
     expect(difficultyForProgress(base, 0).mirrorRange).toEqual([5, 5]);
+    expect(difficultyForProgress(base, 0).collisionRange).toEqual([0, 4]);
     expect(difficultyForProgress(base, 1).mirrorRange).toEqual([6, 6]);
-    expect(difficultyForProgress(base, 2).mirrorRange).toEqual([7, 7]);
+    expect(difficultyForProgress(base, 1).collisionRange).toEqual([0, 4]);
+    expect(difficultyForProgress(base, 2).mirrorRange).toEqual([6, 6]);
     expect(difficultyForProgress(base, 2).level).toBe(3);
-    expect(difficultyForProgress(base, 2).collisionRange).toEqual([3, 6]);
+    expect(difficultyForProgress(base, 2).collisionRange).toEqual([1, 5]);
+    expect(difficultyForProgress(base, 3).mirrorRange).toEqual([7, 7]);
+    expect(difficultyForProgress(base, 4).collisionRange).toEqual([2, 6]);
   });
 
-  it("stops adding mirrors at half the board then raises the collision maximum", () => {
+  it("stops adding mirrors at half the board while collisions keep rising every two levels", () => {
     expect(maxMirrorsForSize(5)).toBe(12);
-    expect(maxMirrorsForSize(7)).toBe(24);
-    const atCap = difficultyForProgress(DIFFICULTIES[0], 7);
-    const afterCap = difficultyForProgress(DIFFICULTIES[0], 8);
+    expect(maxMirrorsForSize(6)).toBe(18);
+    const atCap = difficultyForProgress(DIFFICULTIES[0], 13);
+    const afterCap = difficultyForProgress(DIFFICULTIES[0], 14);
     expect(atCap.mirrorRange).toEqual([12, 12]);
-    expect(atCap.collisionRange).toEqual([3, 11]);
+    expect(atCap.collisionRange).toEqual([6, 10]);
     expect(afterCap.mirrorRange).toEqual([12, 12]);
-    expect(afterCap.collisionRange).toEqual([3, 12]);
+    expect(afterCap.collisionRange).toEqual([7, 11]);
+  });
+
+  it("keeps shortcut L5 presets on the same progression curve", () => {
+    expect(DIFFICULTIES[1].mirrorRange).toEqual([7, 7]);
+    expect(DIFFICULTIES[1].collisionRange).toEqual([2, 6]);
+    expect(DIFFICULTIES[3].mirrorRange).toEqual([8, 8]);
+    expect(DIFFICULTIES[3].collisionRange).toEqual([2, 6]);
   });
 });
 

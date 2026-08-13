@@ -133,6 +133,13 @@ export function App() {
   const size = puzzle?.size ?? difficulty.size;
   const mirrorCount = puzzle?.mirrors.length ?? difficulty.mirrorRange[0];
   const reachedMirrorCap = difficulty.mirrorRange[0] >= maxMirrorsForSize(difficulty.size);
+  const nextLevel = difficulty.level + 1;
+  const nextLevelRaisesCollision = nextLevel >= 3 && nextLevel % 2 === 1;
+  const nextUpgradeLabel = nextLevelRaisesCollision
+    ? `Next collision range · now ${difficulty.collisionRange[0]}–${difficulty.collisionRange[1]}`
+    : reachedMirrorCap
+      ? "Mirror limit · level only"
+      : "Next mirror";
   const showMirrors = phase === "memorize" || phase === "reveal" || phase === "result";
   const ball = puzzle && (phase === "answer" ? puzzle.path[0] : phase === "reveal" ? puzzle.path[animationIndex] : phase === "result" ? puzzle.path.at(-1)! : null);
   const collision = phase === "reveal" && ball && puzzle?.mirrors.some((mirror) => mirror.row === ball.row && mirror.col === ball.col)
@@ -161,12 +168,12 @@ export function App() {
       </header>
 
       <Hud level={difficulty.level} size={size} mirrors={mirrorCount} streak={streak} score={score} />
-      <div className="streak-track" aria-label={reachedMirrorCap ? "Wins toward a higher collision limit" : `${streak} of ${WINS_PER_LEVEL} wins toward another mirror`}>
-        <span>{reachedMirrorCap ? `Next collision limit · now ${difficulty.collisionRange[1]}` : "Next mirror"}</span>
+      <div className="streak-track" aria-label={`${streak} of ${WINS_PER_LEVEL} wins toward ${nextUpgradeLabel}`}>
+        <span>{nextUpgradeLabel}</span>
         <div className="streak-dots" aria-hidden="true">
           {Array.from({ length: WINS_PER_LEVEL }, (_, index) => <i className={index < streak ? "filled" : ""} key={index} />)}
         </div>
-        <strong>{reachedMirrorCap ? `+1 in ${WINS_PER_LEVEL - streak}` : `${WINS_PER_LEVEL - streak} wins`}</strong>
+        <strong>{WINS_PER_LEVEL - streak} wins</strong>
         <button className="reset-progress" onClick={resetCurrentProgress} disabled={phase !== "idle" && phase !== "result"}>Reset progress</button>
       </div>
 
